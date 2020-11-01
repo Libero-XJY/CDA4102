@@ -255,7 +255,6 @@ def NOR_simulate(zhiling):
     a=register[zhiling[2]]
     b=register[zhiling[3]]
     register[zhiling[1]]=~(a|b)
-
     global index
     index+=4
 
@@ -349,10 +348,10 @@ if __name__ == "__main__":
     f2=open("disassembly.txt","w")
     f3=f1.readlines()
     f4=open("simulation.txt","w")
-    stop=False#代表遇没遇到break指令
-    start=256#写死的从256开始
-    ins_content={}#存的是指令+包含的数字
-    start_ins={}#存的是256对应的指令/data
+    stop=False
+    start=256
+    ins_content={}#ins-number
+    start_ins={}#256-ins/data
     start1,start2=0,0
     for instruction in f3:
         category=instruction[0:2]
