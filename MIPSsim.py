@@ -483,17 +483,17 @@ def fetch():
                     BEQ_pipeline(instruction)
                 elif instruction[0]=="BGTZ":
                     BGTZ_pipeline(instruction)
-                jump=True#这个circle发生过跳转  
+                jump=True#this cycle execute the branch 
                 executed_instruction.clear()    
-        fetch_queue.clear()#无空位就clear 
-        return #然后return，就当无事发生
+        fetch_queue.clear()#just clear 
+        return #return 
     if len(pre_issue)==4:
         fetch_queue.clear()
     if fetch_queue:
         buffer_fetch_queue=fetch_queue[:]
         for i in buffer_fetch_queue:
             instruction=ins_content[i]
-            if instruction[0] in branch:#如果是JR BEQ BLTZ BGTZ
+            if instruction[0] in branch:#if there are JR BEQ BLTZ BGTZ
                 if len(buffer_fetch_queue)==2 and buffer_fetch_queue.index(i)==1:
                     branch_reg=[]
                     if instruction[0]=="JR":
@@ -510,7 +510,7 @@ def fetch():
                         waiting_instruction.append(i)
                         fetch_queue.remove(i)
                         continue
-                if not ready_fetch(instruction):#查看他们有没有ready_fetch
+                if not ready_fetch(instruction):#check if ready_fetch
                     executed_instruction.append(i)
                     fetch_queue.remove(i)
                     Temp_ins=PC_ins[i]
@@ -522,14 +522,14 @@ def fetch():
                         BEQ_pipeline(instruction)
                     elif instruction[0]=="BGTZ":
                         BGTZ_pipeline(instruction)
-                    jump=True#这个circle发生过跳转
+                    jump=True#this cycle has executed branch
                     executed_instruction.clear() 
                 else:
                     waiting_instruction.append(i)
                     fetch_queue.remove(i)
-                break#后面的都不要了
-            elif instruction[0] in other_branch:#如果是BREAK J NOP
-                executed_instruction.append(i)#如果是J BREAK直接丢到executed里去
+                break
+            elif instruction[0] in other_branch:#if there are BREAK J NOP
+                executed_instruction.append(i)#if there areJ BREAK, go to the executed
                 fetch_queue.remove(i)
                 Temp_ins=PC_ins[i]
                 jump=True
@@ -547,18 +547,18 @@ def fetch():
                 if fetch_queue and len(pre_issue)+len(fetch_buffer)<4:
                     fetch_buffer.append(i)
                     fetch_queue.remove(i) 
-    fetch_queue.clear()#fetch结束后fetch queue也就没用了，issue部分要用到的东西都放在了fetch_buffer里。
+    fetch_queue.clear()
 
 def issue():
     global cnt
     already_one_mem=False
     already_one_alu2=False
-    if not pre_issue:#队列为空，啥也不干
+    if not pre_issue:#empty queue so we return
         return
-    issue_buffer=[]#最多只能存两个
+    issue_buffer=[]
     for i in pre_issue:
         instruction=ins_content[i]
-        if ready_issue(instruction) or eariler_not_issued(pre_issue.index(i)):#rule 2 and rule 4 and rule 5，我觉得5包含在2/4里面了
+        if ready_issue(instruction) or eariler_not_issued(pre_issue.index(i)):#rule 2 and rule 4 and rule 5
             continue
         if instruction[0] in ["SW","LW"]:#rule 6 and rule 7
             if store_before(pre_issue.index(i)) or already_one_mem:
@@ -566,13 +566,12 @@ def issue():
         if instruction[0] in ["ADD","SUB","MUL","AND","OR","XOR","NOR","SLT","ADDI","ANDI","XORI","ORI","SLL","SRL","SRA"]:
             if already_one_alu2:
                 continue
-        if len(issue_buffer)<2:#把index加入到buffer里面
+        if len(issue_buffer)<2:#add the instruction to buffer
             if instruction[0] in ["SW","LW"]:
                 already_one_mem=True
             if instruction[0] in ["ADD","SUB","MUL","AND","OR","XOR","NOR","SLT","ADDI","ANDI","XORI","ORI","SLL","SRL","SRA"]:
                 already_one_alu2=True
             issue_buffer.append(pre_issue.index(i))
-        # print("issue buffer",issue_buffer)
     if len(issue_buffer)==2:#rule 3
         if check_harzard_between_two(issue_buffer):
             issue_buffer.pop()
@@ -604,13 +603,13 @@ def issue():
                 pre_issue.remove(ins2)
     issue_buffer.clear()
 
-def fetch2():#把fecth_buffer的pc丢到pre issue queue
+def fetch2():# put the pc in the fecth_buffer to the pre issue queue
     global index
     global jump
     if not fetch_buffer:
         return
     while fetch_buffer and len(pre_issue)<4:
-        if not jump:#这个circle没发生过跳转
+        if not jump:
             index+=4
         pre_issue.append(fetch_buffer.pop(0))
     fetch_buffer.clear()
@@ -654,7 +653,7 @@ def get_issue_register(all_data_structure):
             occupied.append(ins_content[i][3])
     return occupied
     
-def get_fetch_register(all_data_structure):#获取后面数据结构所有在写的寄存器，大家都是1。
+def get_fetch_register(all_data_structure):
     occupied=[]
     for i in all_data_structure:#i is pc
         if ins_content[i][0] in["ADD","SUB","MUL","AND","OR","XOR","NOR","SLT","ADDI","ANDI","XORI","ORI","LW","SLL","SRL","SRA"]:
